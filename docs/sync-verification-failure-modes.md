@@ -8,6 +8,8 @@ The denominator is the selected local frozen-plan snapshot. It includes never-di
 | Complete usable enumeration and detail reads, no matching marker | Missing, described as not observed during this scan |
 | Two distinct voucher identities with the marker | Duplicate, even with partial coverage, count is a lower bound |
 | Positive posting, date, account, amount or attachment mismatch | Mismatched, preserve differences even with partial coverage |
+| Otherwise matching voucher has `Removed=true`/`"true"` or nonempty `CostCenter`/`Project` | Invalid detail and Unknown; unsupported row semantics never establish Confirmed |
+| Removed flag is missing/false or cost center/project is missing/empty | Remains fixture-compatible; this does not prove live schema compatibility |
 | Late page/detail failure, changed page totals, wrong page identity, repeated voucher identity or conflicting details | Unknown for otherwise Confirmed/Missing rows throughout the scope |
 | Company binding failure | Unknown throughout the scope, do not collect vouchers |
 | Unreadable receipt bytes or incomplete connection inventory | Unknown receipt check, never receipt absence |
@@ -15,6 +17,7 @@ The denominator is the selected local frozen-plan snapshot. It includes never-di
 | Matching hash metadata without readable original bytes | Unknown |
 | Invalid fingerprint, operation identity, receipt digest, or malformed stored plan | Unknown source row |
 | Malformed frozen source containers, including transaction amounts, receipt or evidence | Unknown for that source row; other valid selected plans remain independently verifiable |
+| Frozen source requires line-item splits or accounting vendor creation | Unknown for that source row; other valid selected plans remain independently verifiable |
 | Malformed company-information or connection-coverage response containers | Unknown company scope or Unknown receipt check; retain explicit partial coverage |
 | Foreign marker or observed voucher outside selected population | Separate Unknown observed-only finding |
 | Empty selected population | Zero local frozen plans, no all-Ramp success claim |

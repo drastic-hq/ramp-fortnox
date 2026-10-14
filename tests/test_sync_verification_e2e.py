@@ -125,6 +125,23 @@ class SyncVerificationE2E(unittest.TestCase):
         self.assertEqual(result.returncode, 2)
         self.assertIn('source snapshot digest', result.stdout)
 
+    def test_unsupported_row_semantics_are_unknown_details(self):
+        self.cli('plan')
+        self.cli('apply')
+        for field, value in [('Removed', True), ('Removed', 'true'),
+                             ('CostCenter', 'TEAM1'), ('Project', 'PRJ1')]:
+            with self.subTest(field=field, value=value):
+                fields = {'Removed': False, 'CostCenter': '', 'Project': ''}
+                fields[field] = value
+                self.control(voucher_row_fields=fields)
+                report, _ = self.verify()
+                self.assertEqual(self.status(report), 'Unknown')
+                self.assertEqual(report['counts']['Confirmed'], 0)
+                self.assertIn('invalid detail', json.dumps(report))
+        self.control(voucher_row_fields={'Removed': False, 'CostCenter': '', 'Project': ''})
+        report, _ = self.verify()
+        self.assertEqual(report['counts'], ORACLE['counts_confirmed'])
+
     def clean_server(self):
         self.stopped_remote = self.remote()
         self.server.terminate()
@@ -326,14 +343,18 @@ class SyncVerificationE2E(unittest.TestCase):
         database_path = self.path / 'local/journal.sqlite'
         with sqlite3.connect(database_path) as database:
             original = database.execute('SELECT plan_json FROM operations WHERE id=?', (ORACLE['operation_id'],)).fetchone()[0]
-        for path in [('transaction', 'entity_amount'), ('transaction',), ('receipt',), ('evidence',),
-                     ('transaction', 'merchant_location'), ('receipt', 'ocr'), ('evidence', 'units_calibration')]:
+        invalid_fields = [(path, 'malformed') for path in [
+            ('transaction', 'entity_amount'), ('transaction',), ('receipt',), ('evidence',),
+            ('transaction', 'merchant_location'), ('receipt', 'ocr'), ('evidence', 'units_calibration')]]
+        invalid_fields += [(('transaction', 'line_items'), [{'amount': 125000}]),
+                           (('transaction', 'requires_accounting_vendor_creation_to_sync'), True)]
+        for path, value in invalid_fields:
             with self.subTest(path=path):
                 raw = json.loads(original)
                 cursor = raw['source']
                 for name in path[:-1]:
                     cursor = cursor[name]
-                cursor[path[-1]] = 'malformed'
+                cursor[path[-1]] = value
                 fingerprint = hashlib.sha256(json.dumps({'source': raw['source'], 'posting': raw['payload']},
                     sort_keys=True, separators=(',', ':')).encode()).hexdigest()
                 raw['fingerprint'] = fingerprint
