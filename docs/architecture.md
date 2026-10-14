@@ -40,3 +40,7 @@ Two independent candidates compared direct operation/step storage with an append
 OCR `tax_amount` is accepted as explicit receipt-derived Ramp evidence only with declared units and matching original receipt evidence. Requiring a second transaction-level VAT field would contradict the supported source. The arithmetic check validates the supplied VAT amount. It never creates missing VAT.
 
 The important open boundary is provider proof. The architecture explains local behavior under declared faults. [Sandbox gates](sandbox-gates.md) define what remains before a live adapter or interoperability claim.
+
+## Read-only assessment
+
+The verifier receives an atomic read-only snapshot of selected frozen plans before collecting target observations. It branches before the writable journal and connector constructors. It compares the expected population independently of dispatch success. It captures observation coverage and raw evidence for offline replay. It never changes a step or authorizes a retry. See [verification](verification.md) for the population boundary and five report classifications.

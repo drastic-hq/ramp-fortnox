@@ -23,7 +23,7 @@ def main():
     scenario_root.mkdir(exist_ok=True)
     run_directory = Path(tempfile.mkdtemp(prefix='run-', dir=str(scenario_root)))
     environment = dict(os.environ, RAMP_FORTNOX_ARTIFACT_DIR=str(run_directory))
-    command = [sys.executable, '-m', 'unittest', 'discover', '-s', 'tests', '-p', 'test_cli_e2e.py', '-v']
+    command = [sys.executable, '-m', 'unittest', 'discover', '-s', 'tests', '-p', 'test_*e2e.py', '-v']
     started = time.monotonic()
     result = subprocess.run(command, cwd=ROOT, env=environment, capture_output=True, text=True)
     transcript = result.stdout + result.stderr
@@ -34,6 +34,7 @@ def main():
               'command': command, 'exit_code': result.returncode,
               'elapsed_seconds': round(time.monotonic() - started, 3),
               'scenario_artifacts': [str(path.relative_to(output)) for path in scenario_paths],
+              'report_artifacts': [str(path.relative_to(output)) for path in sorted(run_directory.glob('*/verification-*/report.json'))],
               'transcript': 'transcript.txt'}
     (output / 'verification.json').write_text(json.dumps(report, indent=2) + '\n')
     print(transcript, end='')

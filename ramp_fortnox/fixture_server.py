@@ -26,7 +26,7 @@ class Store:
                 state = {'fixture': json.loads(Path(fixture).read_text()), 'vouchers': [], 'files': [],
                          'connections': [], 'syncs': [], 'create_attempts': 0, 'detail_reads': 0,
                          'list_pages': 0, 'fault': '', 'metadata_fault': '', 'read_fault': '',
-                         'page_size': 100, 'delay_create': 0, 'hold_create': False, 'pending_create': None}
+                         'method_log': [], 'verification_fault': '', 'page_size': 100, 'delay_create': 0, 'hold_create': False, 'pending_create': None}
                 database.execute('INSERT INTO remote_state VALUES(1,?)', (json.dumps(state),))
 
     def transact(self, action):
@@ -48,7 +48,7 @@ class Handler(BaseHTTPRequestHandler):
         return self.server.store
 
     def send(self, content, status=200, binary=False):
-        encoded = content if binary else json.dumps(content).encode()
+        encoded = content if isinstance(content, bytes) else json.dumps(content).encode()
         self.send_response(status)
         self.send_header('Content-Type', 'application/octet-stream' if binary else 'application/json')
         self.send_header('Content-Length', str(len(encoded)))
@@ -67,6 +67,7 @@ class Handler(BaseHTTPRequestHandler):
         parsed = urlsplit(self.path)
         path = parsed.path
         query = parse_qs(parsed.query)
+        self.store.transact(lambda state: state.setdefault('method_log', []).append({'method': 'GET', 'path': self.path}))
         if path == '/__redirect':
             self.send_response(302)
             self.send_header('Location', 'https://example.com/')
@@ -76,6 +77,7 @@ class Handler(BaseHTTPRequestHandler):
 
         def read(state):
             fixture = state['fixture']
+            verification_fault = state.get('verification_fault', '')
             if path == '/__fixture':
                 return state, 200, False
             if path.startswith('/developer/v1/transactions/'):
@@ -89,6 +91,8 @@ class Handler(BaseHTTPRequestHandler):
             fault = state['metadata_fault']
             if path == '/3/companyinformation':
                 company = 'wrong-company' if fault == 'wrong_company' else fixture['config']['fortnox_company_id']
+                if verification_fault == 'malformed_company':
+                    return {'CompanyInformation': 'malformed'}, 200, False
                 return {'CompanyInformation': {'OrganizationNumber': company}}, 200, False
             if path == '/3/financialyears':
                 return {'FinancialYears': [] if fault == 'missing_year' else
@@ -108,33 +112,63 @@ class Handler(BaseHTTPRequestHandler):
                 vouchers = sorted(state['vouchers'], key=lambda voucher: voucher['number'])
                 page = int(query.get('page', ['1'])[0])
                 size = state['page_size']
+                if verification_fault == 'late_page_fail' and page == 2:
+                    return {'error': 'late page failure'}, 503, False
                 total = max(1, (len(vouchers) + size - 1) // size)
                 selected = vouchers[(page - 1) * size:page * size]
+                if verification_fault in ['repeat_identity', 'conflicting_detail'] and page == 2:
+                    selected = vouchers[:size]
+                if verification_fault == 'changed_total' and page == 2:
+                    total += 1
                 return {'Vouchers': [{'VoucherNumber': voucher['number']} for voucher in selected],
-                        'MetaInformation': {'@TotalPages': total, '@CurrentPage': page}}, 200, False
+                        'MetaInformation': {'@TotalPages': total, '@CurrentPage': page + 1 if verification_fault == 'wrong_current_page' else page}}, 200, False
             if path.startswith('/3/vouchers/'):
                 if state['read_fault'] == 'detail_fail':
                     return {'error': 'fixture full detail read failure'}, 503, False
                 state['detail_reads'] += 1
                 number = int(path.rsplit('/', 1)[1])
+                if verification_fault == 'late_detail_fail' and number == max(v['number'] for v in state['vouchers']):
+                    return {'error': 'late detail failure'}, 503, False
                 voucher = next((voucher for voucher in state['vouchers'] if voucher['number'] == number), None)
                 if not voucher:
                     return {'error': 'not found'}, 404, False
                 detail = copy.deepcopy(voucher['payload']['Voucher'])
                 detail.update({'VoucherNumber': number, 'Year': fixture['config']['financial_year'], 'Manual': False})
+                if verification_fault == 'conflicting_detail' and state['detail_reads'] > 1:
+                    detail['TransactionDate'] = '2026-10-02'
+                if verification_fault == 'foreign_year':
+                    detail['Year'] = 2
+                token = state.get('verification_numeric_token')
+                if token is not None:
+                    encoded = json.dumps({'Voucher': detail}).replace('"Debit": "1000.00"', '"Debit": ' + token, 1)
+                    return encoded.encode(), 200, False
                 return {'Voucher': detail}, 200, False
             if path == '/__proof/files':
                 return {'files': state['files']}, 200, False
             if path.startswith('/__proof/files/'):
+                if verification_fault == 'receipt_fail':
+                    return {'error': 'unreadable receipt'}, 503, False
                 file_id = path.rsplit('/', 1)[1]
                 file = next((file for file in state['files'] if file['id'] == file_id), None)
                 if not file:
                     return {'error': 'not found'}, 404, False
-                return base64.b64decode(file['original_base64']), 200, True
+                content = b'corrupt receipt' if verification_fault == 'corrupt_receipt' else base64.b64decode(file['original_base64'])
+                return content, 200, True
             if path == '/__proof/connections':
                 number = int(query.get('voucher_number', ['0'])[0])
-                return {'connections': [connection for connection in state['connections']
-                                        if connection['voucher_number'] == number]}, 200, False
+                connections = copy.deepcopy([connection for connection in state['connections']
+                                             if connection['voucher_number'] == number])
+                if verification_fault == 'missing_connection':
+                    connections = []
+                if verification_fault == 'wrong_connection':
+                    for connection in connections:
+                        connection['voucher_year'] = 2
+                        connection['voucher_series'] = 'X'
+                if verification_fault == 'malformed_connection_coverage':
+                    return {'connections': connections, 'coverage': 'malformed'}, 200, False
+                return {'connections': connections, 'coverage': {
+                    'protocol': 'fixture-connections-v1', 'complete': verification_fault != 'partial_connections',
+                    'voucher_number': number}}, 200, False
             return {'error': 'unknown fixture route'}, 404, False
 
         content, status, binary = self.store.transact(read)
@@ -144,6 +178,7 @@ class Handler(BaseHTTPRequestHandler):
         body = json.loads(self.rfile.read(int(self.headers.get('Content-Length', 0))))
         parsed = urlsplit(self.path)
         path = parsed.path
+        self.store.transact(lambda state: state.setdefault('method_log', []).append({'method': 'POST', 'path': self.path}))
         delay = self.store.transact(lambda state: state['delay_create'] if path == '/3/vouchers' else 0)
         if delay:
             time.sleep(delay)
@@ -155,9 +190,11 @@ class Handler(BaseHTTPRequestHandler):
             if path == '/__fixture':
                 if body.get('reload_fixture'):
                     state['fixture'] = json.loads(Path(self.store.fixture_path).read_text())
-                for key in ['fault', 'metadata_fault', 'read_fault', 'page_size', 'delay_create', 'hold_create', 'receipt_url_override', 'inactive_account_number']:
+                for key in ['fault', 'metadata_fault', 'read_fault', 'page_size', 'delay_create', 'hold_create', 'receipt_url_override', 'inactive_account_number', 'verification_fault', 'verification_numeric_token']:
                     if key in body:
                         state[key] = body[key]
+                if 'verification_fault' in body:
+                    state['detail_reads'] = 0
                 if body.get('commit_pending') and state['pending_create']:
                     payload = state['pending_create']
                     number = max((voucher['number'] for voucher in state['vouchers']), default=0) + 1
@@ -173,6 +210,27 @@ class Handler(BaseHTTPRequestHandler):
                     for connection in state['connections']:
                         connection['voucher_series'] = 'X'
                         connection['voucher_year'] = 2
+                verification_seed = body.get('verification_seed')
+                if verification_seed:
+                    baseline = state.setdefault('verification_baseline', copy.deepcopy(state['vouchers']))
+                    state['vouchers'] = copy.deepcopy(baseline)
+                    state['detail_reads'] = 0
+                    target = state['vouchers'][0]
+                    if 'duplicate' in verification_seed:
+                        extra = copy.deepcopy(target)
+                        extra['number'] = 2
+                        state['vouchers'].append(extra)
+                    if 'foreign' in verification_seed:
+                        extra = copy.deepcopy(target)
+                        extra['number'] = max(v['number'] for v in state['vouchers']) + 1
+                        extra['payload']['Voucher']['Description'] = 'manual foreign voucher'
+                        state['vouchers'].append(extra)
+                    if 'mismatch' in verification_seed:
+                        target['payload']['Voucher']['VoucherRows'][0]['Debit'] = '999.00'
+                    if verification_seed == 'field_mismatch':
+                        target['payload']['Voucher']['TransactionDate'] = '2026-10-02'
+                        target['payload']['Voucher']['VoucherRows'][0]['Account'] = 9999
+                        target['payload']['Voucher']['VoucherSeries'] = 'X'
                 seed = body.get('seed')
                 if seed == 'known_before_and_after':
                     original = copy.deepcopy(state['vouchers'][0])

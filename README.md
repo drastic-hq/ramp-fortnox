@@ -11,6 +11,7 @@ Use Python 3.9 or later. The implementation uses the standard library.
 ```sh
 python3 scripts/verify.py
 python3 scripts/demo.py
+python3 scripts/verification_demo.py
 python3 -m ramp_fortnox --help
 ```
 
@@ -52,8 +53,25 @@ An empty search never authorizes a voucher retry. A matching marker with differe
 
 These guarantees require one canonical local ledger. They do not cover copied databases, multiple hosts, or another connector writing to the same series. The owned-series convention detects violations; it cannot prevent external writes.
 
+## Independently assess the result
+
+`verify-sync` captures every selected local frozen plan, including never-dispatched plans. It collects scoped GET-only observations and reports Confirmed, Missing, Duplicate, Mismatched, or Unknown with per-dimension checks and coverage. It never changes accounting records or the operation journal.
+
+```sh
+python3 -m ramp_fortnox --workspace local/run --fixture fixtures/purchase.json \
+  --base-url http://127.0.0.1:PORT verify-sync \
+  --company 556000-0000 --year 1 --series R --output artifacts/report
+python3 -m ramp_fortnox replay-verification \
+  --source artifacts/report/source.json --observed artifacts/report/observed.json \
+  --output artifacts/replay
+```
+
+The source population excludes unplanned Ramp transactions. A completed scan is a bounded observation interval, not an atomic provider snapshot. Missing means an expected marker was not observed during that scan. It never proves failed execution or permits a retry. Failed pages, voucher details, or receipt reads preserve uncertainty.
+
+Run `scripts/verification_demo.py` to reproduce all five findings and offline replay. Reports retain the source snapshot, raw observation outcomes, hashes, and GET-only/unchanged-record proof. Read the [verification boundary](docs/verification.md) before interpreting a result.
+
 ## Review the decisions
 
 Start with the [failure contract](docs/failure-modes.md) and [literal posting oracle](fixtures/expected-posting.json). Read the [architecture](docs/architecture.md) for state ownership and recovery. The [API matrix](docs/api-contracts.md) separates documented fields from unverified semantics. The [sandbox gates](docs/sandbox-gates.md) define the next proof before a live adapter can write. The [application summary](docs/application-summary.md) describes the verified scope in four sentences.
 
-Ramp's current schema documents optional receipt OCR `taxes`. It leaves the units of `tax_amount` unspecified. Fixture calibration is synthetic and does not establish units for a real payload. Provider OAuth, response shapes, pagination, upload readback, and live fault behavior remain unverified.
+Ramp's current schema documents optional receipt OCR `taxes`. It leaves the units of `tax_amount` unspecified. Fixture calibration is synthetic and does not establish units for a real payload. Provider OAuth, response shapes, pagination, upload readback, and live fault behavior remain unverified. The [Nordic follow-up](docs/nordic-proof.md) is a later bounded proof proposal, after actual Fortnox interoperability.
