@@ -5,6 +5,8 @@ __pycache__/
 .env.*
 !.env.example
 *.sqlite*
+*.lock
+artifacts/
 .artifacts/
 .audit/
 local/

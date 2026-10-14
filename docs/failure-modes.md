@@ -1,6 +1,6 @@
 # P0 failure contract
 
-Written before implementation. The only supported result is one positive domestic SEK purchase, one balanced voucher, its original receipt attached, and one idempotent Ramp acknowledgement. Synthetic verification does not establish sandbox interoperability.
+The failure contract and literal expected posting were written before implementation. The only supported result is one positive domestic SEK purchase, one balanced voucher, its original receipt attached, and one idempotent Ramp acknowledgement. Synthetic verification does not establish sandbox interoperability.
 
 | Failure | Expected observable result | Injection |
 | --- | --- | --- |
@@ -30,3 +30,7 @@ Written before implementation. The only supported result is one positive domesti
 | Non-loopback URL or live mode | Refused; no live provider writes exist | Configure external endpoint |
 
 The repeatable proof is `python scripts/verify.py`. It calls the public CLI in subprocesses, exercises actual loopback HTTP and two durable SQLite stores, and writes JSON plus a readable transcript under ignored `artifacts/`.
+
+The [CLI E2E scenarios](../tests/test_cli_e2e.py) assert [the independent literal posting](../fixtures/expected-posting.json), original uploaded bytes, and the exact voucher attachment identity. They also cover late commitment, malformed success, failed recovery reads, major-unit and minor-unit tax calibration, fractional öre refusal, source transition to `SYNCED`, remote service restart, and tampering before a repaired acknowledgement. Every acknowledgement reads the voucher, original file bytes, and complete connection identity again. A mismatch requires investigation and retains the confirmed references.
+
+The local HTTP fixture supplies a definitive 422 non-execution contract for receipt upload and connection repair. That contract does not authorize retries against a live provider. `__proof` attachment routes and UTF-8 receipt upload are synthetic fixture protocol, not verified Fortnox endpoints or supported receipt formats.

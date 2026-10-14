@@ -1,0 +1,104 @@
+{
+  "fixture_notice": "Synthetic vendor-shaped selected fields. Evidence and config are local fixture assertions, not vendor API fields or live calibration.",
+  "config": {
+    "ramp_business_id": "44444444-4444-4444-8444-444444444444",
+    "ramp_entity_id": "22222222-2222-4222-8222-222222222222",
+    "fortnox_company_id": "556000-0000",
+    "mapping_revision": "synthetic-map-1",
+    "expense_account": 5410,
+    "vat_account": 2641,
+    "card_liability_account": 2899,
+    "series": "R",
+    "financial_year": 1,
+    "binding_verified": true,
+    "mode": "fixture",
+    "provider_name": "fixture-fortnox",
+    "tax_code_mapping": {
+      "SE25": "25"
+    }
+  },
+  "transaction": {
+    "id": "11111111-1111-4111-8111-111111111111",
+    "entity_id": "22222222-2222-4222-8222-222222222222",
+    "entity_amount": {
+      "currency": "SEK",
+      "value": 125000
+    },
+    "merchant_amount": {
+      "currency": "SEK",
+      "value": 125000
+    },
+    "state": "CLEARED",
+    "sync_status": "SYNC_READY",
+    "all_requirements_met_and_approved": true,
+    "accounting_date": "2026-10-01T12:00:00Z",
+    "updated_at": "2026-10-01T13:00:00Z",
+    "merchant_name": "Svenska Kontor AB",
+    "receipts": [
+      "33333333-3333-4333-8333-333333333333"
+    ],
+    "accounting_field_selections": [
+      {
+        "type": "GL_ACCOUNT",
+        "external_id": "5410",
+        "provider_name": "fixture-fortnox",
+        "display_name": "Office supplies"
+      },
+      {
+        "type": "TAX_CODE",
+        "external_id": "SE25",
+        "provider_name": "fixture-fortnox",
+        "display_name": "25% domestic VAT"
+      }
+    ],
+    "merchant_location": {
+      "country": "SE",
+      "city": "Stockholm",
+      "postal_code": "11122",
+      "state": null
+    }
+  },
+  "receipt": {
+    "id": "33333333-3333-4333-8333-333333333333",
+    "transaction_id": "11111111-1111-4111-8111-111111111111",
+    "receipt_url": "fixture://original-receipt",
+    "ocr": {
+      "currency_code": "SEK",
+      "taxes": [
+        {
+          "tax_amount": 250,
+          "tax_rate": 25,
+          "tax_name": "VAT"
+        }
+      ]
+    }
+  },
+  "evidence": {
+    "source_reference": "synthetic-original-receipt-1",
+    "merchant_country": "SE",
+    "coded_expense_account": 5410,
+    "coded_tax_rate": "25",
+    "units_calibration": {
+      "verified": true,
+      "unit": "SEK_MAJOR",
+      "rate_scale": "percent",
+      "field_path": "receipt.ocr.taxes[].tax_amount",
+      "contract_revision": "2026-10-14",
+      "source_reference": "synthetic-original-receipt-1",
+      "rounding": "HALF_UP_ORE"
+    },
+    "receipt": {
+      "transaction_id": "11111111-1111-4111-8111-111111111111",
+      "receipt_id": "33333333-3333-4333-8333-333333333333",
+      "currency": "SEK",
+      "gross_ore": 125000,
+      "vat_ore": 25000,
+      "net_ore": 100000,
+      "merchant": "Svenska Kontor AB",
+      "date": "2026-10-01",
+      "original_match_verified": true,
+      "sha256": "a396a85589254933012fcd114a6993756f0ccb1d3247abedcf0a2eb97e81d1c7",
+      "original_base64": "U1lOVEhFVElDIFJFQ0VJUFQKTWVyY2hhbnQ6IFN2ZW5za2EgS29udG9yIEFCCkNvdW50cnk6IFNFCkRhdGU6IDIwMjYtMTAtMDEKQ3VycmVuY3k6IFNFSwpOZXQ6IDEwMDAuMDAKVkFUIDI1JTogMjUwLjAwClRvdGFsOiAxMjUwLjAwCg=="
+    }
+  }
+}

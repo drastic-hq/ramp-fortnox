@@ -1,0 +1,8 @@
+SYNTHETIC RECEIPT
+Merchant: Svenska Kontor AB
+Country: SE
+Date: 2026-10-01
+Currency: SEK
+Net: 1000.00
+VAT 25%: 250.00
+Total: 1250.00
