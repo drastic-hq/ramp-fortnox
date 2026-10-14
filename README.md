@@ -1,8 +1,8 @@
 # Ramp to Fortnox
 
-A fixture-driven engineering experiment for one Swedish domestic card purchase. It demonstrates frozen posting plans, evidence gates, and recovery when an accounting API call may have committed without returning a response.
+An engineering experiment for one Swedish domestic card purchase. It contains a Python fixture reference, an independent read-only verifier, and a TypeScript sandbox service with frozen posting plans and durable recovery.
 
-Built independently as a portfolio project for Ramp engineers. No proprietary Drastic code or company records are included. This version uses local HTTP services only. Real Ramp and Fortnox sandbox verification is deferred.
+Built independently as a portfolio project for Ramp engineers. No proprietary Drastic code or company records are included. The Python commands use local HTTP services. The TypeScript service has gated provider adapters and PostgreSQL persistence. Verification so far uses synthetic HTTP services; real Ramp and Fortnox sandbox interoperability remains unproved.
 
 ## Run the proof
 
@@ -16,6 +16,20 @@ python3 -m ramp_fortnox --help
 ```
 
 The verification script drives the public CLI in separate processes against durable local HTTP services. It produces a JSON proof and readable transcript in the ignored `artifacts/` directory. CI reruns the same proof and uploads its artifacts. Fixture results establish behavior under the injected faults. They do not establish provider interoperability.
+
+## Run the TypeScript service proof
+
+```sh
+cd service
+bun install --frozen-lockfile
+bun run typecheck
+bun run proof
+bun run connector --help
+```
+
+Use Bun 1.4.0 and PostgreSQL binaries through `PG_BIN`, or an explicitly supplied isolated test database through `RAMP_TEST_DATABASE_URL`. The runner creates and stops its own local cluster and retains redacted transcripts, SQL states and provider effect counts. Effect 4 owns typed failure/resource boundaries. PostgreSQL and Drizzle own synchronization state. The [sandbox service guide](docs/sandbox-service.md) covers configured service grants, probe requirements, evidence templates and fingerprint-approved apply.
+
+Voucher creation, upload, linking and acknowledgment remain separate durable outcomes. Lost non-idempotent requests do not become new writes because evidence is absent. A pre-existing test voucher/file must establish supported receipt readback before the first voucher POST. A probe is bounded contract evidence for its configured company. Successful synthetic tests do not prove a provider contract or live integration.
 
 ## Inspect one posting
 
@@ -66,7 +80,7 @@ python3 -m ramp_fortnox replay-verification \
   --output artifacts/replay
 ```
 
-The source population excludes unplanned Ramp transactions. A completed scan is a bounded observation interval, not an atomic provider snapshot. Missing means an expected marker was not observed during that scan. It never proves failed execution or permits a retry. Failed pages, voucher details, or receipt reads preserve uncertainty.
+This independent verifier currently reads the Python SQLite fixture journal. The source population excludes unplanned Ramp transactions. A completed scan is a bounded observation interval, not an atomic provider snapshot. Missing means an expected marker was not observed during that scan. It never proves failed execution or permits a retry. Failed pages, voucher details, or receipt reads preserve uncertainty.
 
 Run `scripts/verification_demo.py` to reproduce all five findings and offline replay. Reports retain the source snapshot, raw observation outcomes, hashes, and GET-only/unchanged-record proof. Read the [verification boundary](docs/verification.md) before interpreting a result.
 
@@ -74,4 +88,4 @@ Run `scripts/verification_demo.py` to reproduce all five findings and offline re
 
 Start with the [failure contract](docs/failure-modes.md) and [literal posting oracle](fixtures/expected-posting.json). Read the [architecture](docs/architecture.md) for state ownership and recovery. The [API matrix](docs/api-contracts.md) separates documented fields from unverified semantics. The [sandbox gates](docs/sandbox-gates.md) define the next proof before a live adapter can write. The [application summary](docs/application-summary.md) describes the verified scope in four sentences.
 
-Ramp's current schema documents optional receipt OCR `taxes`. It leaves the units of `tax_amount` unspecified. Fixture calibration is synthetic and does not establish units for a real payload. Provider OAuth, response shapes, pagination, upload readback, and live fault behavior remain unverified. The [Nordic follow-up](docs/nordic-proof.md) is a later bounded proof proposal, after actual Fortnox interoperability.
+Ramp's current schema documents optional receipt OCR `taxes`. It leaves the units of `tax_amount` unspecified. Fixture calibration is synthetic and does not establish units for a real payload. Actual service-grant authorization, response shapes, pagination, upload readback, and live fault behavior remain unverified. The [Nordic follow-up](docs/nordic-proof.md) is a later bounded proof proposal, after actual Fortnox interoperability.
