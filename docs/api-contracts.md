@@ -52,7 +52,7 @@ Fortnox's [client-credentials guide](https://www.fortnox.se/developer/authorizat
 
 - Ramp sandbox access, Swedish entities, SEK cards, accounting connection registration, and tax-bearing receipt availability.
 - Real OCR amount units, rate scale, rounding, and agreement with the receipt.
-- OAuth and PKCE, token renewal, company identity stability, and developer licence terms.
+- Actual service-grant authorization and renewal, company identity stability, browser OAuth/PKCE onboarding, and developer licence terms. The TypeScript service implements the configured service grants; synthetic proof is not actual authorization.
 - Fortnox response shapes, pagination termination, full row equality, receipt upload and content readback, and attachment confirmation.
 - Provider behavior under lost responses, delayed commits, and repeated requests.
 

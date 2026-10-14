@@ -1,6 +1,6 @@
 # Verify the connector against both sandboxes
 
-Live access is deferred for this version. This version runs only against local HTTP fixtures. It cannot write to provider hosts. Do not use its fixture receipt calibration for live data.
+Live access remains deferred. The Python reference is loopback-only. The [TypeScript service](sandbox-service.md) implements configured sandbox service grants, PostgreSQL state and provider adapters. It has only been exercised against synthetic HTTP services. Actual authorization, receipt calibration and provider readback remain required before a live proof.
 
 ## Establish the authorized environment
 
@@ -18,7 +18,7 @@ Live access is deferred for this version. This version runs only against local H
 4. Establish `tax_amount` units and `tax_rate` scale with provider documentation or an independently checked sandbox sample. Record the evidence and its scope. Never infer minor units from other Ramp fields.
 5. Require a single supported domestic tax treatment and exact agreement under the declared rounding rule. Missing or ambiguous evidence blocks posting.
 6. Pin all Fortnox request and response shapes. Verify every page of the owned series and the full details of candidate vouchers.
-7. Implement and review the live transport adapter and OAuth lifecycle. Preserve the fixture-only default and require explicit sandbox identity configuration.
+7. Configure the TypeScript service with authorized sandbox grants, reviewed legal identity and actual readback probes. Its supported service grants require prior access and Fortnox consent. Browser authorization-code onboarding remains a separate grant implementation. The Python reference stays fixture-only.
 
 ## Produce the live proof
 

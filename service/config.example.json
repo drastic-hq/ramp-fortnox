@@ -1,0 +1,50 @@
+{
+  "mode": "sandbox",
+  "databaseUrl": "postgresql://REPLACE_WITH_PRIVATE_CONNECTION",
+  "schema": "ramp_fortnox",
+  "keyEnv": "CONNECTOR_KEY",
+  "ramp": {
+    "origin": "https://demo-api.ramp.com",
+    "tokenUrl": "https://demo-api.ramp.com/developer/v1/token",
+    "clientIdEnv": "RAMP_CLIENT_ID",
+    "clientSecretEnv": "RAMP_CLIENT_SECRET",
+    "businessId": "",
+    "entityId": "",
+    "providerName": ""
+  },
+  "fortnox": {
+    "origin": "https://api.fortnox.se/3",
+    "tokenUrl": "https://apps.fortnox.se/oauth-v1/token",
+    "clientIdEnv": "FORTNOX_CLIENT_ID",
+    "clientSecretEnv": "FORTNOX_CLIENT_SECRET",
+    "tenantId": "",
+    "organizationNumber": "",
+    "consentReference": ""
+  },
+  "binding": {
+    "sourceReference": "",
+    "entityId": "",
+    "organizationNumber": ""
+  },
+  "mapping": {
+    "revision": "",
+    "expenseAccount": 0,
+    "vatAccount": 2641,
+    "liabilityAccount": 0,
+    "taxCode": "",
+    "taxRate": "25",
+    "taxMappingReference": "",
+    "series": ""
+  },
+  "receiptHosts": [],
+  "timeoutMs": 10000,
+  "maxReceiptBytes": 10485760,
+  "probe": {
+    "series": "",
+    "number": 0,
+    "year": 0,
+    "fileId": "",
+    "originalSha256": "",
+    "revision": ""
+  }
+}

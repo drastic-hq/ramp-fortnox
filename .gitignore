@@ -10,3 +10,5 @@ artifacts/
 .artifacts/
 .audit/
 local/
+node_modules/
+!service/bun.lock

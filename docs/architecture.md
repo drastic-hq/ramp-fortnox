@@ -44,3 +44,7 @@ The important open boundary is provider proof. The architecture explains local b
 ## Read-only assessment
 
 The verifier receives an atomic read-only snapshot of selected frozen plans before collecting target observations. It branches before the writable journal and connector constructors. It compares the expected population independently of dispatch success. It captures observation coverage and raw evidence for offline replay. It never changes a step or authorizes a retry. See [verification](verification.md) for the population boundary and five report classifications.
+
+## PostgreSQL sandbox service
+
+The TypeScript service retains the Python reference and its independent posting oracle. PostgreSQL owns unique source actions, immutable encrypted plans and requests, token bindings, and four durable step outcomes. A dedicated session holds the target/year/series dispatch lock. Effect owns typed failure and resource lifetimes. Provider adapters preserve endpoint-specific semantics; they do not share a universal accounting interface. See the [service guide](sandbox-service.md) for proof commands, capabilities and the missing actual-provider gate. The read-only verification command above still uses the Python fixture ledger.
