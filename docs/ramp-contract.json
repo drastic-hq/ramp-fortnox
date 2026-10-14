@@ -1,0 +1,42 @@
+{
+  "source": "https://docs.ramp.com/openapi/developer-api.json",
+  "checked_on": "2026-10-14",
+  "source_sha256": "198f782fc4010748233aebf674c0146356ffc3984ab53c2b362ea7bb73ee5a24",
+  "verification": "documentation only, no sandbox payload",
+  "receipt_scope": [
+    {
+      "oauth2": [
+        "receipts:read"
+      ]
+    }
+  ],
+  "receipt_query_parameters": [
+    "include_ocr_data"
+  ],
+  "amount_shape": {
+    "value": "integer, signed minor units",
+    "currency": "ISO 4217"
+  },
+  "ocr_tax_shape": {
+    "tax_amount": {
+      "type": "number",
+      "nullable": true
+    },
+    "tax_name": {
+      "type": "string",
+      "nullable": true
+    },
+    "tax_rate": {
+      "type": "number",
+      "nullable": true
+    }
+  },
+  "ocr_tax_units": "unverified",
+  "receipt_link": "transaction_id",
+  "receipt_download": "receipt_url, presigned",
+  "approval_field": "all_requirements_met_and_approved",
+  "sync_scope": [
+    "accounting:write"
+  ],
+  "sync_mark_ready_to_sync_default": false
+}
