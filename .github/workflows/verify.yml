@@ -20,6 +20,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - run: python scripts/verify.py
       - run: python scripts/demo.py
+      - run: python scripts/verification_demo.py
       - uses: actions/upload-artifact@v6
         if: always()
         with:

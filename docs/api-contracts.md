@@ -12,7 +12,7 @@ The [current OpenAPI schema](https://docs.ramp.com/openapi/developer-api.json) d
 | Refresh transaction | `GET /developer/v1/transactions/{transaction_id}` | `transactions:read` | Freeze `updated_at`, `entity_id`, accounting selections, receipt IDs, and signed settlement evidence. |
 | Fetch receipt | `GET /developer/v1/receipts/{receipt_id}?include_ocr_data=true` | `receipts:read` | `transaction_id` binds the receipt. `receipt_url` downloads the original. Its signature expires and is not receipt identity. |
 | Report completion | `POST /developer/v1/accounting/syncs` | `accounting:write` | Stable `idempotency_key`, `sync_type=TRANSACTION_SYNC`, `successful_syncs` with transaction ID and voucher reference. |
-| Register accounting connection | Accounting connection API in ERP guide | `accounting:read`, `accounting:write` | Arbitrary `remote_provider_name` acceptance remains unverified. |
+| Register accounting connection | Accounting connection API in ERP guide | `accounting:read`, `accounting:write` | The request accepts a string `remote_provider_name`. Successful activation with this connector remains unverified. |
 
 `entity_amount` and `merchant_amount` use `{currency, value}`. Values are signed integer minor units. Positive SEK purchases are the only supported amounts. `accounting_field_selections` provides coding. A selected tax code is not VAT evidence.
 
@@ -41,6 +41,12 @@ The [voucher guide](https://www.fortnox.se/developer/guides-and-good-to-know/bes
 The guide's voucher-series URL syntax differs from the modern reference. Pin the exact year query and response shape with a real response before enabling an adapter. Shared pagination documentation does not prove list completeness after a concurrent write.
 
 No observed or documented absence guarantee authorizes another voucher POST after a timeout. Deletion is not part of recovery. A missing match stays uncertain.
+
+## Sandbox authentication
+
+Ramp's [quickstart](https://docs.ramp.com/developer-api/v1/guides/getting-started) identifies `https://demo-api.ramp.com` as the sandbox API. A separate sandbox app can use client credentials for a single-business internal integration. Third-party authorization uses the authorization-code flow and a registered HTTPS redirect URI. These grants have different deployment requirements.
+
+Fortnox's [client-credentials guide](https://www.fortnox.se/developer/authorization/get-access-token-using-client-credentials) requires prior customer consent for a service account. The token request carries Basic client credentials, `TenantId`, and `grant_type=client_credentials`. The tenant is the numeric database identity. This avoids rotating user refresh tokens for a consented unattended connection. It does not bypass consent or test-company identity verification.
 
 ## What remains unverified
 

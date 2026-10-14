@@ -14,10 +14,14 @@ The denominator is the selected local frozen-plan snapshot. It includes never-di
 | Complete connection inventory with no connection | Mismatched summary and Missing receipt check |
 | Matching hash metadata without readable original bytes | Unknown |
 | Invalid fingerprint, operation identity, receipt digest, or malformed stored plan | Unknown source row |
+| Malformed frozen source containers, including transaction amounts, receipt or evidence | Unknown for that source row; other valid selected plans remain independently verifiable |
+| Malformed company-information or connection-coverage response containers | Unknown company scope or Unknown receipt check; retain explicit partial coverage |
 | Foreign marker or observed voucher outside selected population | Separate Unknown observed-only finding |
 | Empty selected population | Zero local frozen plans, no all-Ramp success claim |
 | Late commit after a Missing scan | A later scan may Confirm; the first scan never authorizes retry |
 | Captured source or raw request digest is modified | Offline replay refuses the input |
+| Any report/capture destination is a symlink or nonregular file, including one pointing at the ledger | Scan and replay refuse before writing any artifact; ledger and existing artifacts stay unchanged |
+| A regular report/capture destination is hard-linked to the ledger or another file | Atomic replacement changes only the output directory entry; linked file bytes stay unchanged |
 
 Every finding carries `retry_authorized=false` and `execution_outcome=unknown`. Positive mismatches and duplicate lower bounds do not authorize writes. Comparisons preserve P0 ordered rows and exact integer ore. No VAT derivation occurs.
 
