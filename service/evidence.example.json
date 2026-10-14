@@ -1,0 +1,32 @@
+{
+  "mode": "sandbox",
+  "businessId": "",
+  "entityId": "",
+  "merchant_country": "SE",
+  "coded_expense_account": 0,
+  "source_reference": "",
+  "units_calibration": {
+    "verified": false,
+    "unit": "",
+    "rate_scale": "percent",
+    "field_path": "receipt.ocr.taxes[].tax_amount",
+    "contract_revision": "",
+    "source_reference": "",
+    "rounding": "HALF_UP_ORE"
+  },
+  "receipt": {
+    "transaction_id": "",
+    "receipt_id": "",
+    "currency": "SEK",
+    "gross_ore": 0,
+    "vat_ore": 0,
+    "net_ore": 0,
+    "merchant": "",
+    "date": "",
+    "original_match_verified": false,
+    "sha256": "",
+    "original_base64": "",
+    "filename": "",
+    "contentType": ""
+  }
+}
