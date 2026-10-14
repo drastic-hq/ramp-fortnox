@@ -30,6 +30,7 @@
     },
     "state": "CLEARED",
     "sync_status": "SYNC_READY",
+    "synced_at": null,
     "all_requirements_met_and_approved": true,
     "accounting_date": "2026-10-01T12:00:00Z",
     "updated_at": "2026-10-01T13:00:00Z",

@@ -77,6 +77,11 @@ def source_snapshot(fixture, transaction, receipt, original):
             'original_sha256': hashlib.sha256(original).hexdigest()}
 
 
+def supported_p0_row_semantics(row):
+    return (isinstance(row, dict) and row.get('Removed') in (None, False, '', 'false') and
+            all(row.get(field) in (None, False, '') for field in ['CostCenter', 'Project']))
+
+
 def plan_purchase(source, original):
     config, evidence = source['config'], source['evidence']
     transaction, receipt = source['transaction'], source['receipt']
@@ -87,6 +92,9 @@ def plan_purchase(source, original):
             'transaction must be approved with all requirements met')
     require(transaction.get('state') == 'CLEARED', 'transaction must be cleared')
     require(transaction.get('sync_status') == 'SYNC_READY', 'transaction must be SYNC_READY')
+    require(not transaction.get('line_items'), 'transaction line items are unsupported in P0')
+    require(transaction.get('requires_accounting_vendor_creation_to_sync') is not True,
+            'accounting vendor creation is unsupported in P0')
     require(transaction.get('updated_at'), 'transaction updated_at is missing')
     amounts = []
     for field in ['entity_amount', 'merchant_amount']:

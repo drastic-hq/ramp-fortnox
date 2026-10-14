@@ -202,6 +202,8 @@ class Handler(BaseHTTPRequestHandler):
                     state['pending_create'] = None
                 if body.get('tamper_voucher'):
                     state['vouchers'][0]['payload']['Voucher']['VoucherRows'][0]['Debit'] = '999.00'
+                if 'voucher_row_fields' in body:
+                    state['vouchers'][0]['payload']['Voucher']['VoucherRows'][0].update(body['voucher_row_fields'])
                 if body.get('tamper_file'):
                     state['files'][0]['original_base64'] = base64.b64encode(b'wrong original receipt').decode()
                 if body.get('erase_vouchers'):
@@ -316,6 +318,7 @@ class Handler(BaseHTTPRequestHandler):
             if kind == 'ack':
                 state['fixture']['transaction']['sync_status'] = 'SYNCED'
                 state['fixture']['transaction']['updated_at'] = '2026-10-01T13:01:00Z'
+                state['fixture']['transaction']['synced_at'] = '2026-10-01T13:01:00Z'
             if injected and fault.endswith('_drop_commit'):
                 return None, 0, True
             if injected and fault.endswith('_malformed'):

@@ -10,6 +10,7 @@ The failure contract and literal expected posting were written before implementa
 | Non-positive settlement | Refused | Zero or negative amount |
 | Missing tax, mixed taxes, wrong rate or inconsistent amount | Refused | Change explicit VAT evidence |
 | Approval requirements unmet | Refused | Clear `all_requirements_met_and_approved` |
+| Nonempty transaction line items or required accounting vendor creation | Refused before any write; P0 has no split or vendor creation path | Supply `line_items` or set `requires_accounting_vendor_creation_to_sync=true` |
 | Missing receipt, transaction link mismatch or hash mismatch | Refused | Remove or modify original bytes/link |
 | Uncalibrated tax units or receipt totals disagree | Refused | Remove calibration or alter receipt evidence |
 | Missing liability mapping, inactive account, wrong year or series | Refused | Change configured mapping/metadata |
@@ -26,6 +27,9 @@ The failure contract and literal expected posting were written before implementa
 | Definitive upload or connection rejection | Repair only failed step; never recreate voucher | One HTTP 422 |
 | Upload or connection response lost | Uncertain then reconcile remote file/connection before repair | Disconnect after commit |
 | Ramp report rejection or response lost | Retry same stable idempotency key after attachment confirmation | Reject or disconnect |
+| Own committed acknowledgement changes `sync_status`, `updated_at`, and `synced_at` | Repair same acknowledgement only with create/upload/connect confirmed; coding, amount and approval drift still stale | Lost ACK response, then change each remaining source field |
+| `synced_at` changes before own acknowledgement is repairable/confirmed | Stale refusal before writes | Set timestamp after planning |
+| Otherwise matching voucher has removed rows or nonempty cost center/project | Investigate; never confirm or acknowledge unsupported posting | Set `Removed=true` or `"true"`, `CostCenter`, or `Project` |
 | Incomplete attachment | Never acknowledge Ramp | Observe remote sync report count |
 | Non-loopback URL or live mode | Refused; no live provider writes exist | Configure external endpoint |
 

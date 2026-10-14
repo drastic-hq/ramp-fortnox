@@ -169,6 +169,105 @@ class CliE2E(unittest.TestCase):
         self.cli('apply')
         self.assert_complete()
 
+    def test_split_line_items_are_refused_before_writes(self):
+        self.mutate(['transaction', 'line_items'], [{
+            'accounting_field_selections': [{'type': 'GL_ACCOUNT', 'external_id': '5420'}],
+            'amount': {'currency': 'SEK', 'value': 125000}}])
+        self.assertIn('line items', self.cli('plan', expected=2)['error'])
+        self.assertEqual(self.remote()['vouchers'], [])
+        self.assertEqual(self.remote()['syncs'], [])
+
+    def test_vendor_creation_requirement_is_refused_before_writes(self):
+        self.mutate(['transaction', 'requires_accounting_vendor_creation_to_sync'], True)
+        self.assertIn('vendor creation', self.cli('plan', expected=2)['error'])
+        self.assertEqual(self.remote()['vouchers'], [])
+        self.assertEqual(self.remote()['syncs'], [])
+
+    def test_empty_line_items_and_no_vendor_creation_keep_literal_posting(self):
+        self.mutate(['transaction', 'line_items'], [])
+        self.mutate(['transaction', 'requires_accounting_vendor_creation_to_sync'], False)
+        self.assertEqual(self.cli('plan')['posting'], ORACLE)
+        self.assertEqual(self.cli('apply')['state'], 'complete')
+        self.assert_complete()
+
+    def test_lost_ack_with_synced_at_recovers_without_another_voucher(self):
+        self.assertEqual(json.loads(self.fixture.read_text())['transaction'].get('synced_at'), None)
+        self.cli('plan')
+        self.control(fault='ack_drop_commit')
+        self.assertEqual(self.cli('apply')['state'], 'repairable')
+        transaction = self.remote()['fixture']['transaction']
+        self.assertEqual(transaction['sync_status'], 'SYNCED')
+        self.assertEqual(transaction['synced_at'], '2026-10-01T13:01:00Z')
+        self.assertEqual(self.cli('apply')['state'], 'complete')
+        self.assert_complete()
+        self.assertEqual(self.remote()['create_attempts'], 1)
+
+    def ack_source_drift(self, path, value):
+        self.cli('plan')
+        self.control(fault='ack_drop_commit')
+        self.assertEqual(self.cli('apply')['state'], 'repairable')
+        self.fixture.write_text(json.dumps(self.remote()['fixture']))
+        self.mutate(['transaction'] + path, value)
+        before = self.remote()
+        self.assertIn('stale', self.cli('apply', expected=2)['error'])
+        after = self.remote()
+        self.assertEqual(after['vouchers'], before['vouchers'])
+        self.assertEqual(after['syncs'], before['syncs'])
+        self.assertEqual(after['create_attempts'], 1)
+        self.assertEqual(self.cli('status')['operations'][0]['state'], 'repairable')
+
+    def test_lost_ack_does_not_normalize_coding_drift(self):
+        self.ack_source_drift(['accounting_field_selections', 0, 'external_id'], '5420')
+
+    def test_lost_ack_does_not_normalize_amount_drift(self):
+        self.ack_source_drift(['entity_amount', 'value'], 125001)
+
+    def test_lost_ack_does_not_normalize_approval_drift(self):
+        self.ack_source_drift(['all_requirements_met_and_approved'], False)
+
+    def test_synced_at_drift_before_own_ack_is_stale(self):
+        self.cli('plan')
+        self.mutate(['transaction', 'synced_at'], '2026-10-01T13:01:00Z')
+        self.assertIn('stale', self.cli('apply', expected=2)['error'])
+        self.assertEqual(self.remote()['vouchers'], [])
+
+    def unsupported_recovery_row(self, fields):
+        self.cli('plan')
+        self.control(fault='create_drop_commit')
+        self.assertEqual(self.cli('apply')['state'], 'uncertain')
+        self.control(voucher_row_fields=fields)
+        result = self.cli('reconcile')
+        self.assertEqual(result['state'], 'investigate')
+        remote = self.remote()
+        self.assertEqual(len(remote['vouchers']), 1)
+        self.assertEqual(remote['files'], [])
+        self.assertEqual(remote['syncs'], [])
+        self.assertEqual(remote['create_attempts'], 1)
+
+    def test_removed_boolean_row_cannot_recover_voucher(self):
+        self.unsupported_recovery_row({'Removed': True})
+
+    def test_removed_string_row_cannot_recover_voucher(self):
+        self.unsupported_recovery_row({'Removed': 'true'})
+
+    def test_cost_center_row_cannot_recover_voucher(self):
+        self.unsupported_recovery_row({'CostCenter': 'TEAM1'})
+
+    def test_project_row_cannot_recover_voucher(self):
+        self.unsupported_recovery_row({'Project': 'PRJ1'})
+
+    def test_empty_row_metadata_can_recover_literal_voucher(self):
+        self.cli('plan')
+        self.control(fault='create_drop_commit')
+        self.assertEqual(self.cli('apply')['state'], 'uncertain')
+        self.control(voucher_row_fields={'Removed': False, 'CostCenter': '', 'Project': ''})
+        self.assertEqual(self.cli('reconcile')['state'], 'confirmed')
+        self.assertEqual(self.cli('apply')['state'], 'complete')
+        remote = self.remote()
+        self.assertEqual(len(remote['vouchers']), 1)
+        self.assertEqual(len(remote['syncs']), 1)
+        self.assertEqual(remote['create_attempts'], 1)
+
     def test_stale_frozen_inputs_never_write(self):
         self.cli('plan')
         original = self.fixture.read_text()
