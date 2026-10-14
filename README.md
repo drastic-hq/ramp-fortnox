@@ -31,7 +31,7 @@ Account 2899 is a synthetic configuration choice. A real card funding model need
 
 `plan` prints the exact posting and evidence. `apply` refuses stale inputs and dispatches the frozen plan. A receipt OCR value can supply the VAT amount only when its units are explicitly calibrated and it agrees with evidence tied to the original receipt. A 25% code never supplies missing VAT.
 
-P0 requires one bound legal entity, a cleared sync-ready purchase, satisfied Ramp approval requirements, a domestic merchant, and SEK merchant, settlement, and receipt amounts. The financial year and all posting accounts must be valid. Refunds, foreign currencies, other rates, reverse charge, bills, reimbursements, multiple entities, scheduling, and deployment are outside this experiment.
+P0 requires one bound legal entity, a cleared sync-ready purchase, satisfied Ramp approval requirements, a domestic merchant, and SEK merchant, settlement, and receipt amounts. The financial year and all posting accounts must be valid. Split coding, required vendor creation, refunds, foreign currencies, other rates, reverse charge, bills, reimbursements, multiple entities, scheduling, and deployment are outside this experiment. Removed rows or unexpected project/cost-center coding cannot confirm the frozen posting.
 
 ## Recover without another voucher
 

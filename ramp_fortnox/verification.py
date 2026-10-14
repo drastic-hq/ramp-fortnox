@@ -13,7 +13,7 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import quote, urlencode, urljoin, urlsplit
 from urllib.request import build_opener, ProxyHandler, Request
 
-from .domain import canonical, digest, FrozenPlan, load_json, operation_key, plan_purchase, Refusal, require
+from .domain import canonical, digest, FrozenPlan, load_json, operation_key, plan_purchase, Refusal, require, supported_p0_row_semantics
 from .transport import loopback_url, NoRedirects
 
 
@@ -131,6 +131,7 @@ def posting_rows(rows):
     require(isinstance(rows, list) and bool(rows), 'voucher rows missing')
     result = []
     for row in rows:
+        require(supported_p0_row_semantics(row), 'unsupported P0 voucher row semantics')
         account = integer(row['Account'], 'account', True)
         amounts = []
         for name in ['Debit', 'Credit']:

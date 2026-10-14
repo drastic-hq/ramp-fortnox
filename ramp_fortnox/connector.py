@@ -3,7 +3,7 @@ import hashlib
 import os
 from urllib.parse import urlencode
 
-from .domain import digest, operation_key, plan_purchase, Refusal, require, source_snapshot
+from .domain import digest, operation_key, plan_purchase, Refusal, require, source_snapshot, supported_p0_row_semantics
 from .journal import STEPS
 from .transport import ExternalFailure, FixtureHTTP
 
@@ -69,8 +69,11 @@ class Connector:
                 all(steps[kind]['state'] == 'confirmed' for kind in ['create', 'upload', 'connect']) and
                 source['transaction'].get('sync_status') == 'SYNCED'):
             source['transaction'] = dict(source['transaction'])
-            for field in ['sync_status', 'updated_at']:
-                source['transaction'][field] = expected_source['transaction'][field]
+            for field in ['sync_status', 'updated_at', 'synced_at']:
+                if field in expected_source['transaction']:
+                    source['transaction'][field] = expected_source['transaction'][field]
+                else:
+                    source['transaction'].pop(field, None)
         require(digest(source) == digest(expected_source),
                 'stale frozen plan; source, evidence, mapping or receipt changed')
         source['fortnox_preflight'] = self.metadata(plan)
@@ -113,6 +116,8 @@ class Connector:
             return False
         try:
             for actual, wanted in zip(rows, expected['VoucherRows']):
+                if not supported_p0_row_semantics(actual):
+                    return False
                 if actual.get('Account') != wanted['Account']:
                     return False
                 if any(Decimal(str(actual[field])) != Decimal(wanted[field]) for field in ['Debit', 'Credit']):
