@@ -1,0 +1,8 @@
+{
+  "operation_id": "ramp:44444444-4444-4444-8444-444444444444:22222222-2222-4222-8222-222222222222:11111111-1111-4111-8111-111111111111:card_purchase",
+  "policy": {"provider":"fortnox","country":"SE","currency":"SEK","posting_policy":"P0"},
+  "confirmed_checks":{"voucher":"Confirmed","date":"Confirmed","accounts":"Confirmed","amounts":"Confirmed","receipt":"Confirmed"},
+  "counts_confirmed":{"Confirmed":1,"Missing":0,"Duplicate":0,"Mismatched":0,"Unknown":0},
+  "receipt_sha256":"a396a85589254933012fcd114a6993756f0ccb1d3247abedcf0a2eb97e81d1c7",
+  "posting_rows":[{"account":5410,"debit_ore":100000,"credit_ore":0},{"account":2641,"debit_ore":25000,"credit_ore":0},{"account":2899,"debit_ore":0,"credit_ore":125000}]
+}
